@@ -1,10 +1,7 @@
 package com.sam.assignment.model;
 
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.*;
 import lombok.*;
 
 import java.io.Serial;
@@ -21,25 +18,36 @@ public class Employee implements Serializable {
         private static final long serialVersionUID = 1L;
 
         @NotEmpty(message = "Employee ID cannot be empty")
+        @Size(min = 10, max = 10, message = "Employee ID must be exactly 10 characters")
+        @Pattern(regexp = "^[a-zA-Z0-9]+$", message = "Employee ID must be alphanumeric")
         private final String id;
 
         @NotEmpty(message = "Employee First Name cannot be empty")
+        @Size(max = 50, message = "Employee First Name must be at most 50 characters")
+        @Pattern(regexp = "^[a-zA-Z]+$", message = "Employee First Name must contain only letters")
         private final String firstName;
 
         @NotEmpty(message = "Employee Last Name cannot be empty")
+        @Size(max = 50, message = "Employee Last Name must be at most 50 characters")
+        @Pattern(regexp = "^[a-zA-Z]+$", message = "Employee Last Name must contain only letters")
         private final String lastName;
 
+        @Size(max = 10, message = "Manager ID must be at most 10 characters")
+        @Pattern(regexp = "^[a-zA-Z0-9]*$", message = "Manager ID must be alphanumeric")
         private final String managerId;
 
+        @DecimalMax(value = "1000000000", message = "Salary cannot be more than 1 billion")
         @NotNull(message = "Salary cannot be null")
         @Positive(message = "Salary cannot be negative")
         private final BigDecimal salary;
 
         @NotNull(message = "Difference of subordinates average salary cannot be null")
+        @DecimalMax(value = "1000000000", message = "Difference Of Subordinates Average Salary cannot be more than 1 billion")
         private BigDecimal differenceOfSubordinatesAverageSalary = BigDecimal.ZERO;
 
         @NotNull(message = "Reporting line length cannot be null")
-        @DecimalMin(value = "0", inclusive = true, message = "Reporting line length cannot be negativee")
+        @Min(value = 0, message = "Reporting line length cannot be negative")
+        @Max(value = 1000, message = "Reporting line length cannot be greater than 1000")
         private Integer reportingLineLength = 0;
 
         @Valid

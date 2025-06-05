@@ -28,11 +28,11 @@ class OrgHierarchyImplTest {
 
     @Test
     void testBuildHierarchy_CeoAndSubordinates() {
-        Employee ceo = new Employee("1", "Alice", "Smith", null,
+        Employee ceo = new Employee("0000000001", "Alice", "Smith", null,
                 new BigDecimal("2000"), BigDecimal.ZERO, 0, new Subordinate());
-        Employee emp1 = new Employee("2", "Bob", "Jones", "1",
+        Employee emp1 = new Employee("0000000002", "Bob", "Jones", "0000000001",
                 new BigDecimal("1500"), BigDecimal.ZERO, 0, new Subordinate());
-        Employee emp2 = new Employee("3", "Carol", "White", "2",
+        Employee emp2 = new Employee("0000000003", "Carol", "White", "0000000002",
                 new BigDecimal("1200"), BigDecimal.ZERO, 0, new Subordinate());
 
         Map<String, Employee> employees = new HashMap<>();
@@ -43,17 +43,17 @@ class OrgHierarchyImplTest {
         Employee result = orgHierarchy.buildHierarchy(employees);
 
         assertNotNull(result);
-        assertEquals("1", result.getId());
+        assertEquals("0000000001", result.getId());
         assertEquals(1, emp1.getReportingLineLength());
         assertEquals(2, emp2.getReportingLineLength());
     }
 
     void testPopulateEmployeeReportingLine_ExceedsMaxReportingLineLength() {
-        Employee emp1 = new Employee("1", "Alice", "Smith", null,
+        Employee emp1 = new Employee("0000000001", "Alice", "Smith", null,
                 new BigDecimal("2000"), BigDecimal.ZERO, 1, new Subordinate());
-        Employee emp2 = new Employee("2", "Bob", "Jones", "1",
+        Employee emp2 = new Employee("0000000002", "Bob", "Jones", "0000000001",
                 new BigDecimal("1500"), BigDecimal.ZERO, 2, new Subordinate());
-        Employee emp3 = new Employee("3", "Carol", "White", "2",
+        Employee emp3 = new Employee("0000000003", "Carol", "White", "0000000002",
                 new BigDecimal("1200"), BigDecimal.ZERO, 3, new Subordinate());
 
         Map<String, Employee> employees = new HashMap<>();
@@ -70,15 +70,15 @@ class OrgHierarchyImplTest {
 
     @Test
     void testPerformSalaryAnalytics_UnderpaidAndOverpaid() {
-        Employee manager = new Employee("1", "John", "Doe", null,
+        Employee manager = new Employee("0000000001", "John", "Doe", null,
                 new BigDecimal("1200"), BigDecimal.ZERO, 0, new Subordinate());
         manager.getSubordinate().setSubordinatesAverageSalary(new BigDecimal("600"));
 
-        Employee underpaid = new Employee("2", "Under", "Paid", "1",
+        Employee underpaid = new Employee("0000000002", "Under", "Paid", "0000000001",
                 new BigDecimal("600"), BigDecimal.ZERO, 0, new Subordinate());
         underpaid.getSubordinate().setSubordinatesAverageSalary(new BigDecimal("1000"));
 
-        Employee overpaid = new Employee("3", "Over", "Paid", "2",
+        Employee overpaid = new Employee("0000000003", "Over", "Paid", "0000000002",
                 new BigDecimal("1000"), BigDecimal.ZERO, 0, new Subordinate());
         overpaid.getSubordinate().setSubordinatesAverageSalary(BigDecimal.ZERO);
 
@@ -101,7 +101,7 @@ class OrgHierarchyImplTest {
 
     @Test
     void testPerformSalaryAnalytics_ManagerUnderpaid() {
-        Employee manager = new Employee("1", "John", "Doe", null,
+        Employee manager = new Employee("0000000001", "John", "Doe", null,
                 new BigDecimal("850"), BigDecimal.ZERO, 0, new Subordinate());
         manager.getSubordinate().setSubordinatesAverageSalary(new BigDecimal("800"));
 
@@ -120,7 +120,7 @@ class OrgHierarchyImplTest {
 
     @Test
     void testPerformSalaryAnalytics_ManagerOverpaid() {
-        Employee manager = new Employee("1", "John", "Doe", null,
+        Employee manager = new Employee("0000000001", "John", "Doe", null,
                 new BigDecimal("1000"), BigDecimal.ZERO, 0, new Subordinate());
         manager.getSubordinate().setSubordinatesAverageSalary(new BigDecimal("800"));
 

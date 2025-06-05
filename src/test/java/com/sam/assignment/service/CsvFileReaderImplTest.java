@@ -29,18 +29,18 @@ class CsvFileReaderImplTest {
         File tempFile = File.createTempFile("employees", ".csv");
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile))) {
             writer.write("id,firstName,lastName,salary,managerId\n");
-            writer.write("1,Alice,Smith,2000,\n");
-            writer.write("2,Bob,Jones,1500,1\n");
+            writer.write("0000000001,Alice,Smith,2000,\n");
+            writer.write("0000000002,Bob,Jones,1500,1\n");
         }
 
         Map<String, Employee> employees = csvFileReader.readEmployeeDetails(tempFile.getAbsolutePath());
 
         assertEquals(2, employees.size());
-        assertTrue(employees.containsKey("1"));
-        assertTrue(employees.containsKey("2"));
-        assertEquals(new BigDecimal("2000.00"), employees.get("1").getSalary());
-        assertEquals("Alice", employees.get("1").getFirstName());
-        assertEquals("1", employees.get("2").getManagerId());
+        assertTrue(employees.containsKey("0000000001"));
+        assertTrue(employees.containsKey("0000000002"));
+        assertEquals(new BigDecimal("2000.00"), employees.get("0000000001").getSalary());
+        assertEquals("Alice", employees.get("0000000001").getFirstName());
+        assertEquals("1", employees.get("0000000002").getManagerId());
 
         Files.deleteIfExists(tempFile.toPath());
     }
