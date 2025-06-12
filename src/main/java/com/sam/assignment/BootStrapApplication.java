@@ -1,84 +1,44 @@
 package com.sam.assignment;
 
 import com.sam.assignment.model.Employee;
-import com.sam.assignment.model.EmployeeSalaryAnalytics;
-import com.sam.assignment.service.CsvFileReader;
-import com.sam.assignment.service.CsvFileReaderImpl;
-import com.sam.assignment.service.OrgHierarchy;
-import com.sam.assignment.service.OrgHierarchyImpl;
+import com.sam.assignment.model.Response;
+import com.sam.assignment.service.*;
+import com.sam.assignment.util.ValidationUtil;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
-import java.io.IOException;
-
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-
+@Slf4j
 public class BootStrapApplication {
 
-    public static Logger log = LoggerFactory.getLogger(BootStrapApplication.class);
-
     /**
-     * The main method serves as the entry point for the organizational hierarchy builder application.
-     * It reads command-line arguments, validates them, and then builds the organizational hierarchy
-     * from employee details provided in a CSV file. It also performs salary analytics and reporting line checks.
+     * The main method to start the organizational hierarchy builder application.
+     * It initializes the necessary services and orchestrates the reading of employee data,
+     * validation, and building of the organizational hierarchy.
      *
-     * @param args Command-line arguments: file path, manager least pay percentage, manager more pay percentage,
-     *             and threshold reporting line length.
+     * @param args command line arguments, expected to contain the file path and parameters for processing
      */
     public static void main(String[] args) {
         log.info(
             "**************** Starting the organizational hierarchy builder application. ******************"
         );
-        try {
-            if (args.length == 0) {
-                log.error(
-                    "Please provide below mandatory application arguments : " +
-                    "\n1. File-Path \n2. Manager-Least-Pay-Percentage \n3. Manager-More-Pay-Percentage \n4. Threshold-Reporting-Line-Length."
-                );
-                return;
-            }
-            log.info(
-                "Below mandatory application arguments are provided : " +
-                "\n1. File-Path : {} \n2. Manager-Least-Pay-Percentage : {} \n3. Manager-More-Pay-Percentage : {} \n4. Threshold-Reporting-Line-Length : {}",
-                args[0],
-                args[1],
-                args[2],
-                args[3]
-            );
 
+        try {
             final ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
             final Validator validator = factory.getValidator();
 
-            final String filepath = args[0];
-            final BigDecimal managerLeastPayPercentage = new BigDecimal(args[1]).setScale(2, RoundingMode.HALF_UP);
-            final BigDecimal managerOverPayPercentage = new BigDecimal(args[2]).setScale(2, RoundingMode.HALF_UP);
-            final Integer maxReportingLineLength = Integer.parseInt(args[3]);
-
-            final OrgHierarchy<Employee> orgHierarchy = new OrgHierarchyImpl<>(validator);
-            final CsvFileReader csvFileReader = new CsvFileReaderImpl(validator);
-
-            final Map<String, Employee> employees = csvFileReader.readEmployeeDetails(filepath);
-            final Employee ceo = orgHierarchy.buildHierarchy(employees);
-            log.info(
-                "Successfully built the organizational hierarchy with CEO details | ID : {}, Name : {} {}",
-                Objects.nonNull(ceo) ? ceo.getId() : "",
-                Objects.nonNull(ceo) ? ceo.getFirstName() : "",
-                Objects.nonNull(ceo) ? ceo.getLastName() : ""
+            final ValidationUtil validationUtil = new ValidationUtil(validator);
+            final OrgHierarchy<Employee> orgHierarchy = new OrgHierarchyImpl<>();
+            final CsvFileReader csvFileReader = new CsvFileReaderImpl();
+            final OrchestrationService orchestrationService = new OrchestrationService(
+                validationUtil,
+                csvFileReader,
+                orgHierarchy
             );
 
-            final EmployeeSalaryAnalytics employeeSalaryAnalytics = orgHierarchy.performSalaryAnalytics(
-                employees,
-                managerLeastPayPercentage,
-                managerOverPayPercentage
-            );
-            employeeSalaryAnalytics.getLeastPaidEmployees()
+            Response<Employee> response = orchestrationService.doOrchestration(args);
+            response.getLeastPaidManagers()
                 .forEach(employee -> {
                     log.info(
                         "Manager : {} {} | earns : {} | less than required : {} | Manager Salary : {}",
@@ -88,8 +48,9 @@ public class BootStrapApplication {
                         employee.getSalary().add(employee.getDifferenceOfSubordinatesAverageSalary().abs()),
                         employee.getSalary()
                     );
-            });
-            employeeSalaryAnalytics.getOverPaidEmployees()
+                });
+
+            response.getOverPaidManagers()
                 .forEach(employee -> {
                     log.info(
                         "Manager : {} {} | earns : {} | more than required : {} | Manager Salary : {}",
@@ -101,48 +62,23 @@ public class BootStrapApplication {
                     );
                 });
 
-            final List<Employee> employeeReportingLines = orgHierarchy.populateEmployeeReportingLine(
-                employees,
-                Integer.parseInt(args[3])
-            );
-            employeeReportingLines
+            response.getMaxReportingLineLengthEmployees()
                 .forEach(employee -> {
                     log.info(
                         "Employee : {} {} | has reporting line too long-by : {} | actual-reporting-line : {} | threshold-reporting-lone : {}",
                         employee.getFirstName(),
                         employee.getLastName(),
-                        (employee.getReportingLineLength() - maxReportingLineLength),
+                        (employee.getReportingLineLength() - response.getApplicationParameter().getMaxSubordinatesCount()),
                         employee.getReportingLineLength(),
-                        maxReportingLineLength
+                        response.getApplicationParameter().getMaxSubordinatesCount()
                     );
                 });
 
-        } catch (IllegalArgumentException iae) {
-            log.error(
-                "Error building organizational hierarchy. error-message : "+
-                iae.getMessage()
-            );
-            log.error(
-                "IllegalArgumentException : Stacktrace : {}",
-                iae.getMessage()
-            );
-        } catch (IOException ioe) {
-            log.error(
-                "Error reading employee details from file. error-message : "+
-                ioe.getMessage()
-            );
-            log.error(
-                "IOException : Stacktrace : {}",
-                ioe.getMessage()
-            );
         } catch (Exception e) {
             log.error(
-                "An unexpected error occurred. error-message : "+
-                e.getMessage()
-            );
-            log.error(
-                "Exception : Stacktrace : {}",
-                e.getMessage()
+                "An unexpected error occurred. error-message : {}",
+                e.getMessage(),
+                e
             );
         } finally {
             log.info(

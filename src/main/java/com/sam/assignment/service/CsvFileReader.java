@@ -1,23 +1,23 @@
 package com.sam.assignment.service;
 
 import com.sam.assignment.model.Employee;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotEmpty;
+import com.sam.assignment.model.Parameter;
+import com.sam.assignment.util.ValidationUtil;
 
 import java.io.IOException;
 import java.util.Map;
 
-@Valid
 public interface CsvFileReader {
 
     /**
-     * Reads the employee details from a file and returns a map of employee IDs to Employee objects.
+     * Reads employee details from a CSV file and returns a map of employee IDs to Employee objects.
      *
-     * @param filePath The path to the file containing employee details.
-     * @return A map of employee IDs to Employee objects.
-     * @throws IOException If an error occurs while reading the file.
+     * @param applicationParameter the parameters for the application, including the file path
+     * @param validationUtil       utility for validating employee data
+     * @return a map where keys are employee IDs and values are Employee objects
+     * @throws IOException if an error occurs while reading the file
      */
     Map<String, Employee> readEmployeeDetails(
-        @NotEmpty(message = "")
-        final String filePath) throws IOException;
+        final Parameter applicationParameter,
+        final ValidationUtil validationUtil) throws IOException;
 }

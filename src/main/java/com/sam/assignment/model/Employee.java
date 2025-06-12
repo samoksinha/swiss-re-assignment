@@ -7,7 +7,14 @@ import lombok.*;
 import java.io.Serial;
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.LinkedList;
+import java.util.List;
 
+/**
+ * Represents an employee in the organization.
+ * Contains fields for employee ID, first name, last name, manager ID, salary,
+ * difference of subordinates' average salary, reporting line length, and a list of subordinates.
+ */
 @Data
 @AllArgsConstructor
 @EqualsAndHashCode
@@ -38,7 +45,7 @@ public class Employee implements Serializable {
 
         @DecimalMax(value = "1000000000", message = "Salary cannot be more than 1 billion")
         @NotNull(message = "Salary cannot be null")
-        @Positive(message = "Salary cannot be negative")
+        @DecimalMin(value = "0", message = "Salary cannot be negative")
         private final BigDecimal salary;
 
         @NotNull(message = "Difference of subordinates average salary cannot be null")
@@ -46,12 +53,12 @@ public class Employee implements Serializable {
         private BigDecimal differenceOfSubordinatesAverageSalary = BigDecimal.ZERO;
 
         @NotNull(message = "Reporting line length cannot be null")
-        @Min(value = 0, message = "Reporting line length cannot be negative")
-        @Max(value = 1000, message = "Reporting line length cannot be greater than 1000")
+        @DecimalMin(value = "0", message = "Reporting line length cannot be negative")
+        @DecimalMax(value = "1000", message = "Reporting line length cannot be more than 1000")
         private Integer reportingLineLength = 0;
 
         @Valid
-        @NotNull(message = "Subordinate information cannot be null")
-        private Subordinate subordinate;
+        @NotNull(message = "Number of subordinates cannot be null")
+        private final List<Employee> subordinates = new LinkedList<>();
 
 }
